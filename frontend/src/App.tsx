@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Layout from "./components/Layout";
 import DashboardPage from "./pages/DashboardPage";
 import ReviewPage from "./pages/ReviewPage";
+import PetProfilePage from "./pages/PetProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const queryClient = new QueryClient({
@@ -25,6 +26,7 @@ export default function App() {
               path="/documents/:documentId/review"
               element={<ReviewPage />}
             />
+            <Route path="/pets/:petId" element={<PetProfilePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

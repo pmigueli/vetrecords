@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal, get_db
@@ -82,6 +83,20 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     return document
+
+
+@router.get("/{document_id}/file")
+def get_document_file(document_id: str, db: Session = Depends(get_db)):
+    """Download the original uploaded file."""
+    repo = DocumentRepository(db)
+    document = repo.get_by_id(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return FileResponse(
+        document.file_path,
+        filename=document.filename,
+        media_type=document.content_type,
+    )
 
 
 @router.delete("/{document_id}", status_code=204)

@@ -4,6 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.documents import router as documents_router
+from app.api.pets import router as pets_router
+from app.api.visits import router as visits_router
 from app.database import engine, Base
 
 logging.basicConfig(
@@ -34,6 +36,8 @@ def on_startup():
 
 
 app.include_router(documents_router)
+app.include_router(pets_router)
+app.include_router(visits_router)
 
 
 @app.get("/api/health")

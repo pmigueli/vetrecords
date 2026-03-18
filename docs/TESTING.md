@@ -525,8 +525,8 @@ from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.database import Base, get_db
 
-# In-memory SQLite for tests (fast, isolated)
-TEST_DATABASE_URL = "sqlite:///./test.db"
+# In-memory SQLite for tests (fast, isolated, no cleanup needed)
+TEST_DATABASE_URL = "sqlite:///:memory:"
 
 @pytest.fixture(scope="function")
 def db_session():

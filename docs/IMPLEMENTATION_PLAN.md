@@ -134,7 +134,7 @@ commit 13: feat: add editable pet profile and visit forms on review page
   - frontend/src/features/review/VisitTimelineEditable.tsx
 
 commit 14: feat: add confirm and discard actions
-  - backend/app/api/documents.py (POST /confirm, DELETE /discard)
+  - backend/app/api/documents.py (POST /documents/{id}/confirm, DELETE /documents/{id})
   - frontend/src/features/review/ActionBar.tsx
   - Confirm → creates official pet record → redirect to pet profile
   - Discard → deletes everything → back to dashboard

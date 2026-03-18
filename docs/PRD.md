@@ -122,6 +122,8 @@ We analyzed two real clinical history documents:
 
 ### Should Have (V2)
 
+> **Note**: The MVP already displays weight, vaccinations, and recurring conditions in the Pet Profile sidebar as read-only data extracted by the LLM. The V2 features below enhance these with interactive charts, due date tracking, and automatic pattern detection — going beyond simple display.
+
 | ID | As a... | I want to... | So that... |
 |----|---------|-------------|-----------|
 | US-09 | Veterinarian | See a weight chart over time for a pet | I can track growth or weight changes |

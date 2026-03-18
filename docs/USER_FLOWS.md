@@ -132,7 +132,7 @@ TRIGGER: User is on Dashboard
     │ Last visit: Jul 17, 2024    ✅      │
     └──────────────────────────────────────┘
 
- 2. User can search by pet name, owner name, or microchip
+ 2. User can scan the list visually (MVP: small list; V2: search bar)
 
  3. User clicks on a pet card → Flow 4
 ```

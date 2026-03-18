@@ -179,17 +179,21 @@ PHASE 2: LLM STRUCTURING (Claude API calls)
 ┌──────────────┐     1:1      ┌──────────────┐
 │   Document   │─────────────→│     Pet      │
 │              │              │              │
-│ id           │              │ id           │
-│ filename     │              │ name         │
-│ file_path    │              │ species      │
-│ content_type │              │ breed        │
-│ extracted_text│             │ date_of_birth│
-│ detected_lang│              │ sex          │
-│ status       │              │ microchip_id │
-│ created_at   │              │ owner_name   │
-└──────────────┘              │ owner_phone  │
-                              │ clinic_origin│
-                              └──────┬───────┘
+│ id           │              │ id             │
+│ filename     │              │ name           │
+│ file_path    │              │ species        │
+│ content_type │              │ breed          │
+│ extracted_text│             │ date_of_birth  │
+│ detected_lang│              │ sex            │
+│ status       │              │ microchip_id   │
+│ created_at   │              │ coat           │
+└──────────────┘              │ owner_name     │
+                              │ owner_phone    │
+                              │ owner_address  │
+                              │ owner_email    │
+                              │ clinic_name    │
+                              │ clinic_address │
+                              └──────┬─────────┘
                                      │ 1:N
                                      ▼
                               ┌──────────────┐
@@ -210,12 +214,15 @@ PHASE 2: LLM STRUCTURING (Claude API calls)
                               │ notes        │
                               │ raw_text     │  ← original text for this visit
                               │ edited       │  ← boolean, was this manually corrected?
+                              │ veterinarian │
                               └──────────────┘
 
-> **Note on owner fields**: The ER diagram shows `owner_name` and `owner_phone` as flat
-> database columns on the Pet table. In the LLM prompt schemas, owner info is returned as a
-> nested JSON object (e.g., `{ "owner": { "name": "...", "phone": "..." } }`). The service
-> layer flattens this nested structure into individual columns when saving to the database.
+> **Note on nested LLM output → flat columns**: The LLM prompts return nested JSON objects
+> (e.g., `{ "owner": { "name": "...", "phone": "...", "address": "..." } }` and
+> `{ "clinic": { "name": "...", "address": "..." } }`). The service layer flattens these
+> into individual database columns when saving (e.g., `owner.name` → `owner_name`,
+> `clinic.name` → `clinic_name`). Similarly, `pet.coat` and `visit.veterinarian` are
+> extracted by the LLM and stored as flat columns.
 ```
 
 ### Visit JSON Example (from Marley's document)
@@ -910,8 +917,9 @@ Since frontend (port 5173) and backend (port 8000) run on different origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type"],
+    allow_credentials=False,
 )
 ```
 

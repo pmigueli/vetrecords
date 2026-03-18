@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import UploadModal from "../components/UploadModal";
 import { useDocuments } from "../api/documents";
 import type { Document } from "../types";
@@ -78,9 +79,25 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function DocumentCard({ document }: { document: Document }) {
+function DocumentCard({
+  document,
+  onClick,
+}: {
+  document: Document;
+  onClick?: () => void;
+}) {
+  const isClickable =
+    document.status === "review" || document.status === "confirmed";
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center justify-between">
+    <div
+      onClick={isClickable ? onClick : undefined}
+      className={`bg-white rounded-xl border border-gray-200 p-5 flex items-center justify-between ${
+        isClickable
+          ? "cursor-pointer hover:border-green-300 hover:shadow-sm transition-all"
+          : ""
+      }`}
+    >
       <div className="flex items-center gap-4">
         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
           <svg
@@ -100,18 +117,38 @@ function DocumentCard({ document }: { document: Document }) {
         <div>
           <p className="font-medium text-gray-900">{document.filename}</p>
           <p className="text-sm text-gray-500">
-            {document.file_size || "—"} · Uploaded{" "}
+            {document.file_size || "—"}
+            {document.visit_count && ` · ${document.visit_count} visits`}
+            {" · "}
             {new Date(document.created_at).toLocaleDateString()}
           </p>
         </div>
       </div>
-      <StatusBadge status={document.status} />
+      <div className="flex items-center gap-3">
+        <StatusBadge status={document.status} />
+        {isClickable && (
+          <svg
+            className="w-5 h-5 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        )}
+      </div>
     </div>
   );
 }
 
 export default function DashboardPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const navigate = useNavigate();
   const { data: documents, isLoading } = useDocuments();
 
   return (
@@ -171,7 +208,17 @@ export default function DashboardPage() {
       {!isLoading && documents && documents.length > 0 && (
         <div className="space-y-3">
           {documents.map((doc) => (
-            <DocumentCard key={doc.id} document={doc} />
+            <DocumentCard
+              key={doc.id}
+              document={doc}
+              onClick={() => {
+                if (doc.status === "review") {
+                  navigate(`/documents/${doc.id}/review`);
+                } else if (doc.status === "confirmed" && doc.pet_id) {
+                  navigate(`/pets/${doc.pet_id}`);
+                }
+              }}
+            />
           ))}
         </div>
       )}

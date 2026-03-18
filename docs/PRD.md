@@ -259,6 +259,14 @@ We analyzed two real clinical history documents:
 - HIPAA/GDPR compliance (would be critical in production)
 - Billing and subscription management
 
+### Future Enhancements (Review Page)
+
+- Inline field-by-field editing (click a single field to edit instead of the whole card)
+- Undo/redo history for edit operations
+- Auto-save while editing (instead of explicit Save button per card)
+- Diff view showing original extraction vs. edited values
+- Add/remove items in lists (medications, procedures, diagnosis tags)
+
 ---
 
 ## 8. Risks & Assumptions

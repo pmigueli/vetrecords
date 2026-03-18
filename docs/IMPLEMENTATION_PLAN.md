@@ -129,9 +129,12 @@ commit 12: feat: add review page with PDF viewer
   - React Router: /documents/:id/review
 
 commit 13: feat: add editable pet profile and visit forms on review page
-  - frontend/src/features/review/PetProfileForm.tsx (React Hook Form)
-  - frontend/src/features/review/VisitEditCard.tsx (editable visit card)
-  - frontend/src/features/review/VisitTimelineEditable.tsx
+  - frontend/src/api/pets.ts (useUpdatePet mutation → PUT /api/v1/pets/{id})
+  - frontend/src/api/visits.ts (useUpdateVisit mutation → PUT /api/v1/visits/{id})
+  - frontend/src/features/review/PetEditCard.tsx (whole-card edit mode with React Hook Form)
+  - frontend/src/features/review/VisitEditCard.tsx (whole-card edit mode: date, reason, exam, vitals, diagnosis, medications, notes)
+  - frontend/src/features/review/RawTextCollapsible.tsx (collapsible original text per visit)
+  - frontend/src/pages/ReviewPage.tsx (integrate edit cards, raw text, edit state management)
 
 commit 14: feat: add confirm and discard actions
   - backend/app/api/documents.py (POST /documents/{id}/confirm, DELETE /documents/{id})

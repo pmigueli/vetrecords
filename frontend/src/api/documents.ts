@@ -42,6 +42,36 @@ export function useDocuments() {
   });
 }
 
+export function useConfirmDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (documentId: string) => {
+      const response = await apiClient.post(
+        `/api/v1/documents/${documentId}/confirm`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      queryClient.invalidateQueries({ queryKey: ["pets"] });
+    },
+  });
+}
+
+export function useDiscardDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (documentId: string) => {
+      await apiClient.delete(`/api/v1/documents/${documentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    },
+  });
+}
+
 export function useDocument(documentId: string | null) {
   return useQuery<Document>({
     queryKey: ["document", documentId],

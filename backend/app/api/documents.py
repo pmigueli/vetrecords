@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.database import SessionLocal, get_db
 from app.repositories.document_repository import DocumentRepository
+from app.repositories.pet_repository import PetRepository
+from app.repositories.visit_repository import VisitRepository
 from app.schemas.document import DocumentResponse, DocumentUploadResponse
 from app.services.pipeline import ProcessingPipeline
 from app.services.upload import (
@@ -99,11 +101,49 @@ def get_document_file(document_id: str, db: Session = Depends(get_db)):
     )
 
 
+@router.post("/{document_id}/confirm")
+def confirm_document(document_id: str, db: Session = Depends(get_db)):
+    """Confirm reviewed data — pet becomes official record."""
+    doc_repo = DocumentRepository(db)
+    document = doc_repo.get_by_id(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if document.status == "confirmed":
+        raise HTTPException(status_code=409, detail="Document already confirmed")
+    if not document.pet_id:
+        raise HTTPException(
+            status_code=400, detail="No pet data to confirm"
+        )
+
+    # Update pet status to confirmed
+    pet_repo = PetRepository(db)
+    pet = pet_repo.get_by_id(document.pet_id)
+    if pet:
+        pet.status = "confirmed"
+
+    # Update document status
+    doc_repo.update_status(document, "confirmed")
+    logger.info(f"Document confirmed: {document_id}, pet: {document.pet_id}")
+
+    return {"pet_id": document.pet_id, "status": "confirmed"}
+
+
 @router.delete("/{document_id}", status_code=204)
 def delete_document(document_id: str, db: Session = Depends(get_db)):
     """Discard a document and its extracted data."""
-    repo = DocumentRepository(db)
-    document = repo.get_by_id(document_id)
+    doc_repo = DocumentRepository(db)
+    document = doc_repo.get_by_id(document_id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
-    repo.delete(document)
+
+    # Delete associated visits and pet
+    if document.pet_id:
+        visit_repo = VisitRepository(db)
+        visit_repo.delete_by_pet_id(document.pet_id)
+        pet_repo = PetRepository(db)
+        pet = pet_repo.get_by_id(document.pet_id)
+        if pet:
+            pet_repo.delete(pet)
+
+    doc_repo.delete(document)
+    logger.info(f"Document discarded: {document_id}")

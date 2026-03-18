@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useDocument } from "../api/documents";
+import { useDocument, useConfirmDocument, useDiscardDocument } from "../api/documents";
 import { usePet } from "../api/pets";
 import { useVisits } from "../api/visits";
 import DocumentViewer from "../features/review/DocumentViewer";
@@ -7,6 +8,9 @@ import DocumentViewer from "../features/review/DocumentViewer";
 export default function ReviewPage() {
   const { documentId } = useParams<{ documentId: string }>();
   const navigate = useNavigate();
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const confirmMutation = useConfirmDocument();
+  const discardMutation = useDiscardDocument();
 
   const { data: document, isLoading: docLoading } = useDocument(
     documentId ?? null
@@ -68,10 +72,28 @@ export default function ReviewPage() {
           </span>
         </div>
 
-        <div className="text-sm text-gray-400">
-          {document.visit_count
-            ? `${document.visit_count} visits detected`
-            : ""}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowDiscardConfirm(true)}
+            disabled={discardMutation.isPending || confirmMutation.isPending}
+            className="px-4 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Discard
+          </button>
+          <button
+            onClick={async () => {
+              if (!documentId) return;
+              const result = await confirmMutation.mutateAsync(documentId);
+              navigate(`/pets/${result.pet_id}`);
+            }}
+            disabled={confirmMutation.isPending || discardMutation.isPending}
+            className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Confirm & Save
+          </button>
         </div>
       </div>
 
@@ -215,6 +237,44 @@ export default function ReviewPage() {
           )}
         </div>
       </div>
+
+      {/* Discard confirmation dialog */}
+      {showDiscardConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowDiscardConfirm(false)}
+          />
+          <div className="relative bg-white rounded-xl shadow-xl p-6 max-w-sm mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Discard this document?
+            </h3>
+            <p className="text-sm text-gray-500 mb-5">
+              This will delete all extracted data including the pet profile and
+              visits. This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowDiscardConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!documentId) return;
+                  await discardMutation.mutateAsync(documentId);
+                  navigate("/");
+                }}
+                disabled={discardMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {discardMutation.isPending ? "Deleting..." : "Discard"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

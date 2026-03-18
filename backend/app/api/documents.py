@@ -1,11 +1,12 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import SessionLocal, get_db
 from app.repositories.document_repository import DocumentRepository
 from app.schemas.document import DocumentResponse, DocumentUploadResponse
+from app.services.pipeline import ProcessingPipeline
 from app.services.upload import (
     FileTooLargeError,
     InvalidFileError,
@@ -18,9 +19,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 
 
+def _run_pipeline(document_id: str) -> None:
+    """Run processing pipeline in background with its own DB session."""
+    db = SessionLocal()
+    try:
+        pipeline = ProcessingPipeline(db)
+        pipeline.process(document_id)
+    finally:
+        db.close()
+
+
 @router.post("/upload", response_model=DocumentUploadResponse, status_code=201)
 async def upload_document(
     file: UploadFile,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     """Upload a clinical history document and start processing."""
@@ -41,6 +53,9 @@ async def upload_document(
         content_type=content_type,
         file_size=_format_file_size(len(open(file_path, "rb").read())),
     )
+
+    # Start background processing (extract text → split visits → structure)
+    background_tasks.add_task(_run_pipeline, document.id)
 
     logger.info(f"Document uploaded: {document.id} ({original_filename})")
 

@@ -39,6 +39,18 @@ export function useDocuments() {
       const response = await apiClient.get("/api/v1/documents");
       return response.data;
     },
+    refetchInterval: (query) => {
+      const docs = query.state.data;
+      // Poll every 3s if any document is still processing
+      const hasProcessing = docs?.some(
+        (d) =>
+          d.status === "processing" ||
+          d.status === "extracting" ||
+          d.status === "splitting" ||
+          d.status === "structuring"
+      );
+      return hasProcessing ? 3000 : false;
+    },
   });
 }
 

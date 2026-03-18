@@ -17,7 +17,7 @@ A veterinarian uploads a clinical history PDF containing dozens of visits. The s
 ```bash
 # 1. Clone and configure
 git clone <repo-url>
-cd pablo-barbiku
+cd vetrecords
 cp .env.example .env
 # Edit .env and add your ANTHROPIC_API_KEY
 
@@ -35,7 +35,7 @@ docker-compose up --build
 Pre-load an example record so you can explore the full UI immediately:
 
 ```bash
-docker exec -it pablo-barbiku-backend-1 python -m app.seed
+docker exec -it vetrecords-backend-1 python -m app.seed
 ```
 
 This creates Marley (Labrador Retriever) with 10 sample visits including emergencies, vaccinations, and lab results.
@@ -105,7 +105,7 @@ Interactive API docs: **http://localhost:8000/docs** (Swagger UI)
 
 ```bash
 # Run all tests (inside Docker)
-docker exec -it pablo-barbiku-backend-1 pytest -v
+docker exec -it vetrecords-backend-1 pytest -v
 
 # Or locally with dependencies installed
 cd backend && pytest -v
@@ -116,7 +116,7 @@ Tests run without an API key — all Claude calls are mocked with saved response
 ## Project Structure
 
 ```
-pablo-barbiku/
+vetrecords/
 ├── backend/
 │   ├── app/
 │   │   ├── api/           ← Route handlers (thin layer)

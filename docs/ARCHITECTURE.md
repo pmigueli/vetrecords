@@ -626,7 +626,7 @@ App
 ### Project Structure
 
 ```
-pablo-barbiku/
+vetrecords/
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py

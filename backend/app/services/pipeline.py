@@ -50,12 +50,12 @@ class ProcessingPipeline:
             document.detected_language = language_code
             self.db.commit()
 
-            # Step 3: Extract pet profile from header (Claude API)
-            if self.structurer and split_result.header_text:
+            # Step 3: Extract pet profile from header
+            if split_result.header_text:
                 self._extract_pet_profile(document, split_result.header_text)
 
-            # Step 4: Structure visits in batches (Claude API)
-            if self.structurer and document.pet_id:
+            # Step 4: Structure visits in batches
+            if document.pet_id:
                 self._structure_visits(
                     document, split_result.visit_chunks, language_code
                 )

@@ -157,9 +157,13 @@ class ClaudeStructurer:
         return visits
 
 
-def get_structurer() -> ClaudeStructurer | None:
-    """Factory: returns Claude structurer if API key is available."""
+def get_structurer() -> "ClaudeStructurer | RegexStructurer":
+    """Factory: returns Claude if API key available, regex fallback otherwise."""
     if settings.anthropic_api_key:
+        logger.info("Using Claude structurer")
         return ClaudeStructurer(api_key=settings.anthropic_api_key)
-    logger.warning("No Anthropic API key — structuring will be skipped")
-    return None
+
+    from app.services.fallback import RegexStructurer
+
+    logger.info("No Anthropic API key — using regex fallback structurer")
+    return RegexStructurer()

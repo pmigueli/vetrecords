@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.documents import router as documents_router
 from app.database import engine, Base
 
 logging.basicConfig(
@@ -30,6 +31,9 @@ app.add_middleware(
 def on_startup():
     Base.metadata.create_all(bind=engine)
     logger.info("VetRecords API started")
+
+
+app.include_router(documents_router)
 
 
 @app.get("/api/health")

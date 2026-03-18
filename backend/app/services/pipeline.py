@@ -4,8 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.models.document import Document
 from app.repositories.document_repository import DocumentRepository
+from app.repositories.pet_repository import PetRepository
 from app.services.extraction import get_extractor, UnsupportedFormatError
 from app.services.splitter import split_visits
+from app.services.structuring import get_structurer
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,8 @@ class ProcessingPipeline:
     def __init__(self, db: Session):
         self.db = db
         self.repo = DocumentRepository(db)
+        self.pet_repo = PetRepository(db)
+        self.structurer = get_structurer()
 
     def process(self, document_id: str) -> None:
         """Run the full processing pipeline for a document."""
@@ -38,9 +42,13 @@ class ProcessingPipeline:
             # Step 2: Split visits by date patterns
             split_result = self._split_visits(document)
 
-            # Step 3: Structure visits — added in Phase 4
+            # Step 3: Extract pet profile from header (Claude API)
+            if self.structurer and split_result.header_text:
+                self._extract_pet_profile(document, split_result.header_text)
 
-            # For now, mark as review with visit count
+            # Step 4: Structure visits — added in commit 10
+
+            # Mark as review with visit count
             document.visit_count = str(len(split_result.visit_chunks))
             self.repo.update_status(document, "review")
             logger.info(
@@ -97,3 +105,18 @@ class ProcessingPipeline:
             f"{len(result.header_text)} chars header"
         )
         return result
+
+    def _extract_pet_profile(self, document: Document, header_text: str) -> None:
+        """Step 3: Extract pet profile from header using Claude."""
+        logger.info(f"Extracting pet profile for {document.id}")
+
+        pet_data = self.structurer.extract_pet(header_text)
+        pet = self.pet_repo.create(document.id, pet_data)
+
+        document.pet_id = pet.id
+        self.db.commit()
+
+        logger.info(
+            f"Pet profile extracted for {document.id}: "
+            f"{pet.name} ({pet.species}, {pet.breed})"
+        )

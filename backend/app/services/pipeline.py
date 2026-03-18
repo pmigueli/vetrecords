@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.models.document import Document
 from app.repositories.document_repository import DocumentRepository
 from app.services.extraction import get_extractor, UnsupportedFormatError
+from app.services.splitter import split_visits
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +35,18 @@ class ProcessingPipeline:
             if not document.extracted_text:
                 self._extract_text(document)
 
-            # Step 2: Split visits — added in commit 8
+            # Step 2: Split visits by date patterns
+            split_result = self._split_visits(document)
+
             # Step 3: Structure visits — added in Phase 4
 
-            # For now, mark as review since we extracted text
+            # For now, mark as review with visit count
+            document.visit_count = str(len(split_result.visit_chunks))
             self.repo.update_status(document, "review")
-            logger.info(f"Pipeline complete for {document_id}")
+            logger.info(
+                f"Pipeline complete for {document_id}: "
+                f"{len(split_result.visit_chunks)} visits detected"
+            )
 
         except UnsupportedFormatError as e:
             self.repo.update_status(document, "error", error_message=str(e))
@@ -76,3 +83,17 @@ class ProcessingPipeline:
         logger.info(
             f"Text extracted for {document.id}: {len(raw_text)} characters"
         )
+
+    def _split_visits(self, document: Document):
+        """Step 2: Split extracted text into header + visit chunks."""
+        self.repo.update_status(document, "splitting")
+        logger.info(f"Splitting visits for {document.id}")
+
+        result = split_visits(document.extracted_text)
+
+        logger.info(
+            f"Split complete for {document.id}: "
+            f"{len(result.visit_chunks)} visits, "
+            f"{len(result.header_text)} chars header"
+        )
+        return result

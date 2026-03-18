@@ -89,15 +89,15 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
 
 @router.get("/{document_id}/file")
 def get_document_file(document_id: str, db: Session = Depends(get_db)):
-    """Download the original uploaded file."""
+    """Serve the original uploaded file for inline viewing."""
     repo = DocumentRepository(db)
     document = repo.get_by_id(document_id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     return FileResponse(
         document.file_path,
-        filename=document.filename,
         media_type=document.content_type,
+        headers={"Content-Disposition": f'inline; filename="{document.filename}"'},
     )
 
 

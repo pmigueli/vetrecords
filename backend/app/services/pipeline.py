@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 from app.models.document import Document
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.pet_repository import PetRepository
+from app.repositories.visit_repository import VisitRepository
 from app.services.extraction import get_extractor, UnsupportedFormatError
+from app.services.language import detect_language
 from app.services.splitter import split_visits
 from app.services.structuring import get_structurer
 
@@ -25,6 +27,7 @@ class ProcessingPipeline:
         self.db = db
         self.repo = DocumentRepository(db)
         self.pet_repo = PetRepository(db)
+        self.visit_repo = VisitRepository(db)
         self.structurer = get_structurer()
 
     def process(self, document_id: str) -> None:
@@ -42,18 +45,27 @@ class ProcessingPipeline:
             # Step 2: Split visits by date patterns
             split_result = self._split_visits(document)
 
+            # Detect language for prompt adaptation
+            language_code = detect_language(document.extracted_text)
+            document.detected_language = language_code
+            self.db.commit()
+
             # Step 3: Extract pet profile from header (Claude API)
             if self.structurer and split_result.header_text:
                 self._extract_pet_profile(document, split_result.header_text)
 
-            # Step 4: Structure visits — added in commit 10
+            # Step 4: Structure visits in batches (Claude API)
+            if self.structurer and document.pet_id:
+                self._structure_visits(
+                    document, split_result.visit_chunks, language_code
+                )
 
             # Mark as review with visit count
             document.visit_count = str(len(split_result.visit_chunks))
             self.repo.update_status(document, "review")
             logger.info(
                 f"Pipeline complete for {document_id}: "
-                f"{len(split_result.visit_chunks)} visits detected"
+                f"{len(split_result.visit_chunks)} visits structured"
             )
 
         except UnsupportedFormatError as e:
@@ -120,3 +132,39 @@ class ProcessingPipeline:
             f"Pet profile extracted for {document.id}: "
             f"{pet.name} ({pet.species}, {pet.breed})"
         )
+
+    def _structure_visits(
+        self,
+        document: Document,
+        visit_chunks: list[dict],
+        language_code: str,
+    ) -> None:
+        """Step 4: Structure visits using Claude with batching."""
+        self.repo.update_status(document, "structuring")
+        total = len(visit_chunks)
+        processed = 0
+
+        def on_batch_complete(
+            visits: list[dict], batch_idx: int, total_batches: int
+        ) -> None:
+            nonlocal processed
+            # Save each batch of visits to DB
+            raw_texts = [
+                visit_chunks[processed + i]["text"]
+                for i in range(len(visits))
+            ]
+            self.visit_repo.create_batch(
+                document.pet_id, document.id, visits, raw_texts
+            )
+            processed += len(visits)
+            logger.info(
+                f"Batch {batch_idx + 1}/{total_batches} saved: "
+                f"{processed}/{total} visits"
+            )
+
+        logger.info(f"Structuring {total} visits for {document.id}")
+        self.structurer.structure_visits(
+            visit_chunks, language_code, on_batch_complete=on_batch_complete
+        )
+
+        logger.info(f"All {processed} visits structured for {document.id}")

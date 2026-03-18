@@ -2,7 +2,6 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 
 const NAV_ITEMS = [
   { label: "Dashboard", path: "/" },
-  { label: "Records", path: "/records" },
 ];
 
 export default function Layout() {

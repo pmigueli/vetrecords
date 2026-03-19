@@ -34,6 +34,34 @@ def list_visits(
     }
 
 
+@router.get("/pets/{pet_id}/visits/order")
+def detect_visit_order(pet_id: str, db: Session = Depends(get_db)):
+    """Detect the chronological direction of visits as they appear in the source document."""
+    from app.models.visit import Visit
+
+    # Query visits in insertion order (created_at) to reflect PDF order
+    visits = (
+        db.query(Visit)
+        .filter(Visit.pet_id == pet_id)
+        .order_by(Visit.created_at.asc())
+        .all()
+    )
+
+    if len(visits) <= 1:
+        return {"sort": "desc"}
+
+    # Get first and last visit with valid dates (in PDF order)
+    dated = [v for v in visits if v.date]
+    if len(dated) < 2:
+        return {"sort": "desc"}
+
+    first_date = dated[0].date
+    last_date = dated[-1].date
+
+    # If first date is older, PDF goes old→new (asc). Otherwise new→old (desc).
+    return {"sort": "asc" if first_date <= last_date else "desc"}
+
+
 @router.get("/visits/{visit_id}", response_model=VisitResponse)
 def get_visit(visit_id: str, db: Session = Depends(get_db)):
     """Get a specific visit with all data."""

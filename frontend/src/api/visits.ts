@@ -20,6 +20,17 @@ export function useVisits(
   });
 }
 
+export function useVisitOrder(petId: string | null) {
+  return useQuery<{ sort: string }>({
+    queryKey: ["visitOrder", petId],
+    queryFn: async () => {
+      const response = await apiClient.get(`/api/v1/pets/${petId}/visits/order`);
+      return response.data;
+    },
+    enabled: !!petId,
+  });
+}
+
 export function useVisit(visitId: string | null) {
   return useQuery<Visit>({
     queryKey: ["visit", visitId],

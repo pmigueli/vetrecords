@@ -9,7 +9,7 @@ A veterinarian uploads a clinical history PDF containing dozens of visits. The s
 1. **Extracts text** from the document (PDF, DOCX, or image)
 2. **Splits into visits** using regex date pattern detection
 3. **Structures each visit** with Claude AI (diagnosis, treatment, medications, lab results)
-4. **Presents a Review page** where the vet verifies the extraction against the original PDF
+4. **Presents a Review page** where the vet verifies and edits the extraction against the original PDF
 5. **Creates an official record** with a browsable visit timeline after confirmation
 
 ## Quick Start
@@ -95,6 +95,7 @@ Frontend (React + Vite + TS)     Backend (FastAPI + Python)
 | GET | `/api/v1/pets/{id}` | Pet profile |
 | PUT | `/api/v1/pets/{id}` | Update pet profile |
 | GET | `/api/v1/pets/{id}/visits` | Paginated visit list |
+| GET | `/api/v1/pets/{id}/visits/order` | Detect PDF visit sort order |
 | GET | `/api/v1/visits/{id}` | Visit details |
 | PUT | `/api/v1/visits/{id}` | Update visit (marks as edited) |
 | GET | `/api/health` | Health check |

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useDocument, useConfirmDocument, useDiscardDocument } from "../api/documents";
 import { usePet } from "../api/pets";
-import { useVisits } from "../api/visits";
+import { useVisits, useVisitOrder } from "../api/visits";
 import DocumentViewer from "../features/review/DocumentViewer";
 import PetEditCard from "../features/review/PetEditCard";
 import VisitEditCard from "../features/review/VisitEditCard";
@@ -18,7 +18,9 @@ export default function ReviewPage() {
     documentId ?? null
   );
   const { data: pet } = usePet(document?.pet_id ?? null);
-  const { data: visitsData } = useVisits(pet?.id ?? null, 1, 100, "asc");
+  const { data: visitOrder } = useVisitOrder(pet?.id ?? null);
+  const sort = visitOrder?.sort ?? "desc";
+  const { data: visitsData } = useVisits(pet?.id ?? null, 1, 100, sort);
 
   if (docLoading) {
     return (

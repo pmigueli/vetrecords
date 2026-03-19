@@ -6,9 +6,9 @@ Rules:
 - Extract ONLY information that is explicitly stated in the text.
 - If a field is not found in the text, use null — never guess or infer.
 - Dates should be in ISO format (YYYY-MM-DD).
-- Preserve original language for names and addresses.
-- "Canino" → "Canine", "Felino" → "Feline" for species. Keep breed in original language.
-- Sex: normalize to "Male" or "Female". Spanish: "M" or "Macho" → "Male", "H" or "Hembra" → "Female".
+- Preserve the original language of the document. Do NOT translate clinical content.
+- Species: use the original language term (e.g. "Canino", "Felino" for Spanish; "Canine", "Feline" for English).
+- Sex: use the original language term (e.g. "Macho"/"Hembra" for Spanish; "Male"/"Female" for English).
 
 Return ONLY valid JSON, no markdown, no explanation."""
 

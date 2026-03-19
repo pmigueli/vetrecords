@@ -210,8 +210,8 @@ Return this exact JSON structure — one object per visit, in the same order:
     "date": "YYYY-MM-DD or null",
     "time": "HH:MM or null",
     "visit_type": "consultation | emergency | vaccination | follow_up | phone_call | hospitalization | surgery | administrative | lab_results",
-    "reason": "string — why the pet came in (1-2 sentences, translated to English)",
-    "examination": "string — physical exam findings (translated to English) or null",
+    "reason": "string — why the pet came in (1-2 sentences)",
+    "examination": "string — physical exam findings or null",
     "vital_signs": {
       "temperature_celsius": "number or null",
       "weight_kg": "number or null",
@@ -417,10 +417,10 @@ Language Detection (lightweight, before LLM call)
 Claude Prompt (system prompt includes detected language + glossary)
     │
     ▼
-Structured Output (ALWAYS in English — normalized)
+Structured Output (in original document language)
     │
     ▼
-Stored: structured data (English) + raw_text (original language) + detected_language
+Stored: structured data (original language) + raw_text (original language) + detected_language
 ```
 
 ### Language Detection
@@ -561,8 +561,7 @@ Rules:
 - Extract ONLY information explicitly stated in the text.
 - If a field is not found, use null (for strings) or empty array [] (for lists).
 - Dates: convert to ISO format (YYYY-MM-DD).
-- ALL structured output must be in ENGLISH, regardless of the document language.
-- Preserve original language ONLY for: pet names, owner names, medication brand names, clinic names, and addresses.
+- ALL structured output must be in {language_name}, matching the original document language. Do NOT translate clinical content.
 - Visit types: classify as one of: "consultation", "emergency", "vaccination", "follow_up", "phone_call", "hospitalization", "surgery", "administrative", "lab_results".
 
 {glossary}
@@ -648,8 +647,8 @@ class Document(Base):
 
 ## Prompt Design Principles
 
-### 1. Translate to English, preserve names
-The structured output is in English for consistency, but pet names, owner names, medication brand names, and clinic names stay in their original language. This makes the data usable internationally while keeping identifiers accurate.
+### 1. Preserve original document language
+The structured output preserves the original language of the document. If the PDF is in Spanish, the extracted reason, examination, diagnosis, and other clinical fields stay in Spanish. This respects the vet's working language and avoids translation errors in medical terminology.
 
 ### 2. Language-adaptive abbreviation glossary
 Abbreviation glossaries are loaded dynamically based on detected language. This prevents misinterpretation:

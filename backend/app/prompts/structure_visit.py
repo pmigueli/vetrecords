@@ -17,8 +17,7 @@ Rules:
 - Extract ONLY information explicitly stated in the text.
 - If a field is not found, use null (for strings) or empty array [] (for lists).
 - Dates: convert to ISO format (YYYY-MM-DD). Handle "dd/mm/yy" and "dd/mm/yyyy".
-- ALL structured output must be in ENGLISH, regardless of the document language.
-- Preserve original language ONLY for: pet names, owner names, medication brand names, clinic names, and addresses.
+- ALL structured output must be in {language_name}, matching the original document language. Do NOT translate clinical content.
 - Visit types: classify as one of: "consultation", "emergency", "vaccination", "follow_up", "phone_call", "hospitalization", "surgery", "administrative", "lab_results".
 - Vital signs: extract temperature (°C), weight (kg), heart rate (bpm), respiratory rate (rpm).
 - Weight: appears in many forms — "4.1kg", "pv 15kg", "Peso 7 kg". Always extract as number in kg.
@@ -41,8 +40,8 @@ Return this exact JSON structure — one object per visit, in the same order:
     "date": "YYYY-MM-DD or null",
     "time": "HH:MM or null",
     "visit_type": "consultation | emergency | vaccination | follow_up | phone_call | hospitalization | surgery | administrative | lab_results",
-    "reason": "string — why the pet came in (1-2 sentences, in English)",
-    "examination": "string — physical exam findings (in English) or null",
+    "reason": "string — why the pet came in (1-2 sentences)",
+    "examination": "string — physical exam findings or null",
     "vital_signs": {{
       "temperature_celsius": "number or null",
       "weight_kg": "number or null",

@@ -93,8 +93,8 @@ See `docs/IMPLEMENTATION_PLAN.md` for the full plan with exact files per commit.
 - Documents can be in Spanish (primary), English, French, Portuguese
 - Language auto-detected with `langdetect`
 - Abbreviation glossaries loaded dynamically per language
-- Structured output always in English (normalized)
-- Original text preserved in source language
+- Structured output preserves the original document language
+- Original text also preserved in source language
 
 ## Important Patterns to Follow
 
